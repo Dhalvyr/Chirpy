@@ -7,15 +7,15 @@ import (
 	"os"
 	"sync/atomic"
 
-	_ "github.com/lib/pq"
-	"github.com/joho/godotenv"
 	"github.com/Dhalvyr/Chirpy/internal/database"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
-	db *database.Queries
-	platform string
+	db             *database.Queries
+	platform       string
 }
 
 func main() {
@@ -27,8 +27,8 @@ func main() {
 	}
 	dbQueries := database.New(db)
 	mux := http.NewServeMux()
-	
-	apiCfg := apiConfig{db: dbQueries, platform:os.Getenv("PLATFORM")}
+
+	apiCfg := apiConfig{db: dbQueries, platform: os.Getenv("PLATFORM")}
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
@@ -36,9 +36,10 @@ func main() {
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerPostChirp)
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerGetChirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerGetSingleChirp)
 	server := &http.Server{
-	Addr: ":8080",
-	Handler: mux,
+		Addr:    ":8080",
+		Handler: mux,
 	}
 	log.Fatal(server.ListenAndServe())
 }

@@ -6,21 +6,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/Dhalvyr/Chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 type Chirp struct {
-	ID uuid.UUID `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	Body string `json:"body"`
-	UserID uuid.UUID `json:"user_id"`
+	Body      string    `json:"body"`
+	UserID    uuid.UUID `json:"user_id"`
 }
 
 func (cfg *apiConfig) handlerPostChirp(resp http.ResponseWriter, req *http.Request) {
 	type parameters struct {
-		Body string `json:"body"`
+		Body     string `json:"body"`
 		PosterID string `json:"user_id"`
 	}
 
@@ -51,7 +51,7 @@ func (cfg *apiConfig) handlerPostChirp(resp http.ResponseWriter, req *http.Reque
 	}
 
 	newchirp, err := cfg.db.CreateChirp(req.Context(), database.CreateChirpParams{
-		Body: joinChirp,
+		Body:   joinChirp,
 		UserID: parsedID,
 	})
 	if err != nil {
@@ -60,11 +60,11 @@ func (cfg *apiConfig) handlerPostChirp(resp http.ResponseWriter, req *http.Reque
 	}
 
 	finalChirp := Chirp{
-		ID: newchirp.ID,
+		ID:        newchirp.ID,
 		CreatedAt: newchirp.CreatedAt,
 		UpdatedAt: newchirp.UpdatedAt,
-		Body: newchirp.Body,
-		UserID: newchirp.UserID,
+		Body:      newchirp.Body,
+		UserID:    newchirp.UserID,
 	}
 
 	respondWithJSON(resp, 201, finalChirp)
@@ -72,6 +72,6 @@ func (cfg *apiConfig) handlerPostChirp(resp http.ResponseWriter, req *http.Reque
 
 var badWords = map[string]struct{}{
 	"kerfuffle": {},
-	"sharbert": {},
-	"fornax": {},
+	"sharbert":  {},
+	"fornax":    {},
 }

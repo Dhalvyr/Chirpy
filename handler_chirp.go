@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Dhalvyr/Chirpy/internal/auth"
 	"github.com/Dhalvyr/Chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -21,7 +22,6 @@ type Chirp struct {
 func (cfg *apiConfig) handlerPostChirp(resp http.ResponseWriter, req *http.Request) {
 	type parameters struct {
 		Body     string `json:"body"`
-		PosterID string `json:"user_id"`
 	}
 
 	decoder := json.NewDecoder(req.Body)
@@ -44,15 +44,22 @@ func (cfg *apiConfig) handlerPostChirp(resp http.ResponseWriter, req *http.Reque
 		}
 	}
 	joinChirp := strings.Join(splittedChirp, " ")
-	parsedID, err := uuid.Parse(params.PosterID)
+	
+	bearerToken, err := auth.GetBearerToken(req.Header)
 	if err != nil {
-		respondWithError(resp, 400, err.Error())
+		respondWithError(resp, 401, "Unauthorized")
+		return
+	}
+
+	validatedID, err := auth.ValidateJWT(bearerToken, cfg.jwtSecret)
+	if err != nil {
+		respondWithError(resp, 401, "Unauthorized")
 		return
 	}
 
 	newchirp, err := cfg.db.CreateChirp(req.Context(), database.CreateChirpParams{
 		Body:   joinChirp,
-		UserID: parsedID,
+		UserID: validatedID,
 	})
 	if err != nil {
 		respondWithError(resp, 500, err.Error())

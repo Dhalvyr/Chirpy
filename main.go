@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwtSecret string
 }
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 	dbQueries := database.New(db)
 	mux := http.NewServeMux()
 
-	apiCfg := apiConfig{db: dbQueries, platform: os.Getenv("PLATFORM")}
+	apiCfg := apiConfig{db: dbQueries, platform: os.Getenv("PLATFORM"), jwtSecret: os.Getenv("JWT_SECRET")}
 	mux.Handle("/app/", apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(".")))))
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -68,5 +69,58 @@ func TestJWTWrongSecret(t *testing.T) {
 	_, err = ValidateJWT(tokenString, secretString2)
 	if err == nil {
 		t.Errorf("expected error due to mismatching secret token, got none")
+	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	tests := []struct {
+		name string
+		input http.Header
+		wantToken string
+		wantErr bool
+	}{
+		{
+			name: "Everything fine",
+			input: http.Header{"Authorization": []string{"Bearer valid-token"}},
+			wantToken: "valid-token",
+			wantErr: false,
+		},
+		{
+			name: "No Authorization",
+			input: http.Header{},
+			wantToken: "",
+			wantErr: true,
+		},
+		{
+			name: "Invalid token len",
+			input: http.Header{"Authorization": []string{"Bearer"}},
+			wantToken: "",
+			wantErr: true,
+		},
+		{
+			name: "Invalid token empty token",
+			input: http.Header{"Authorization": []string{"Bearer "}},
+			wantToken: "",
+			wantErr: true,
+		},
+		{
+			name: "Invalid token != bearer",
+			input: http.Header{"Authorization": []string{"something invalid-token"}},
+			wantToken: "",
+			wantErr: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			bearerToken, err := GetBearerToken(test.input)
+			if (err != nil) != test.wantErr {
+				t.Errorf("GetBearerToken() error = %v, expected error= %v\n", err, test.wantErr)
+				return
+			}
+			if bearerToken != test.wantToken {
+				t.Errorf("GetBearerToken() got bearerToken = %v, expected %v", bearerToken, test.wantToken)
+			}
+		})
 	}
 }
